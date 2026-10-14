@@ -3,9 +3,19 @@ const DAY=86400000,opm='https://www.opm.gov/policy-data-oversight/pay-leave/fede
 const events=[
 ['valentine','Valentine’s Day','02-14','02-14','retail','기프트·뷰티 제안',calendar],['easter','Easter','04-05','04-05','retail','봄 프로모션 기회',calendar],['mother','Mother’s Day','05-10','05-10','retail','뷰티·웰니스 기프트',calendar],['memorial','Memorial Day','05-25','05-25','holiday','연휴 수요·배송 변동',opm],['father','Father’s Day','06-21','06-21','retail','선물 수요',calendar],['independence','Independence Day','07-04','07-04','holiday','연휴 수요·배송 변동 (연방 관측일 7/3)',opm],['labor','Labor Day','09-07','09-07','holiday','연휴·가을 전환',opm],['fall','TikTok Shop Fall Deals','10-02','10-11','platform','계정별 참여 일정 확인 필요',tiktok],['halloween','Halloween','10-31','10-31','retail','시즌 콘텐츠 수요',calendar],['bfcm','TikTok Shop BFCM','11-11','12-01','platform','계정별 등록·참여 여부 확인 필요',tiktok],['thanksgiving','Thanksgiving','11-26','11-26','holiday','구매와 배송 일정 변동',opm],['blackfriday','Black Friday','11-27','11-27','retail','BFCM 안의 쇼핑 피크',calendar],['cyber','Cyber Monday','11-30','11-30','retail','BFCM 안의 온라인 쇼핑 피크',calendar],['christmas','Christmas','12-25','12-25','holiday','선물·배송 마감에 따른 변동',opm]
 ].map(([id,name,s,e,type,effect,source])=>({id,name,start:'2026-'+s,end:'2026-'+e,type,effect,source,verifiedAt:'2026-10-14'}));
-const additive={customers:['newCustomers','repeatCustomers'],automations:['sent','replies','sampleRequests'],shop:['gmv','orders','items','refunds'],ads:['cost','revenue','skuOrders','impressions','clicks'],products:['gmv','orders','items','refunds'],creative:['cost','revenue','skuOrders','impressions','clicks'],affiliate:['gmv','orders','items','commission','refunds','videos','liveStreams'],samples:['shipped','contentGmv','cogs','shipping','contents'],outreach:['contacted','invited','messaged','added','requested','received','posted','selling'],promotions:['gmv','orders','discount']};
+events.push(...[
+ ['dfyd','Deals For You Days','06-17','07-02','사용자 제공 계정 등록 화면 · 17:00 시작, GMT-7'],
+ ['summer','Summer Sale','07-22','08-02','사용자 제공 계정 등록 화면 · GMT-7'],
+ ['bts','Back To School','08-20','08-30','사용자 제공 계정 등록 화면 · GMT-7'],
+ ['stockup','September Stock Up','09-16','09-27','사용자 제공 일정 · 판매 자료 미제공']
+].map(([id,name,s,e,effect])=>({id,name,start:'2026-'+s,end:'2026-'+e,type:'platform',effect,source:null,verifiedAt:'2026-10-14'})));
+events.push(...[
+ ['newyear','New Year’s Day','01-01'],['mlk','Martin Luther King Jr. Day','01-19'],['washington','Washington’s Birthday','02-16'],['juneteenth','Juneteenth','06-19'],['independence-observed','Independence Day (observed)','07-03'],['columbus','Columbus Day','10-12'],['veterans','Veterans Day','11-11']
+].map(([id,name,d])=>({id,name,start:'2026-'+d,end:'2026-'+d,type:'holiday',effect:'미국 연방 공휴일 · 판매 증가 여부는 일별 실적으로 확인',source:opm,verifiedAt:'2026-10-14'})));
+events.sort((a,b)=>a.start.localeCompare(b.start));
+const additive={seasonal:['gmv','skuOrders','items'],customers:['newCustomers','repeatCustomers'],automations:['sent','replies','sampleRequests'],shop:['gmv','orders','items','refunds'],ads:['cost','revenue','skuOrders','impressions','clicks'],products:['gmv','orders','items','refunds'],creative:['cost','revenue','skuOrders','impressions','clicks'],affiliate:['gmv','orders','items','commission','refunds','videos','liveStreams'],samples:['shipped','contentGmv','cogs','shipping','contents'],outreach:['contacted','invited','messaged','added','requested','received','posted','selling'],promotions:['gmv','orders','discount']};
 const day=s=>Date.parse(s+'T00:00:00Z'),date=n=>new Date(n).toISOString().slice(0,10),weekday=s=>new Date(day(s)).getUTCDay(),weekend=s=>[0,6].includes(weekday(s)),mean=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:null,inside=(s,e)=>s>=e.start&&s<=e.end;
-function select(records,{brandId,module,entity,metric,asOf}){if(module==='customers')return [];
+function select(records,{brandId,module,entity,metric,asOf}){if(['customers','seasonal'].includes(module))return [];
 
  const rs=BG.latest(records).filter(r=>r.brandId===brandId&&r.module===module&&r.entity===entity&&r.complete&&r.basis==='period'&&r.end<=asOf&&Number.isFinite(BG.metric(r,metric))).sort((a,b)=>b.end.localeCompare(a.end)||b.start.localeCompare(a.start));
  if(!rs.length)return [];
@@ -21,6 +31,13 @@ function learn(rs,k,calendarEvents=events){const daily=rs.filter(r=>r.start===r.
  for(const e of calendarEvents){const event=daily.filter(p=>inside(p.date,e)),control=clean.filter(p=>day(p.date)>=day(e.start)-56*DAY&&p.date<e.start);let ratios=[];for(const p of event){const matched=control.filter(c=>weekday(c.date)===weekday(p.date));if(matched.length>=2&&mean(matched.map(c=>c.value))>0)ratios.push(p.value/mean(matched.map(c=>c.value)));}
  if(event.length>=3&&ratios.length===event.length&&control.length>=14)result.campaigns[e.id]={uplift:mean(ratios)-1,eventN:event.length,controlN:control.length,start:e.start,end:e.end};
  }
+ const holidayRows=[],controlDates=new Set(),holidayIds=new Set();
+ for(const e of calendarEvents.filter(e=>e.type==='holiday')){
+  const event=daily.filter(p=>inside(p.date,e)&&!calendarEvents.some(c=>c.id!==e.id&&c.type!=='holiday'&&inside(p.date,c)));
+  const control=clean.filter(p=>day(p.date)>=day(e.start)-56*DAY&&p.date<e.start);
+  for(const p of event){const matched=control.filter(c=>weekday(c.date)===weekday(p.date));const base=mean(matched.map(c=>c.value));if(matched.length>=2&&control.length>=14&&base>0){holidayRows.push(p.value/base);holidayIds.add(e.id);matched.forEach(c=>controlDates.add(c.date));}}
+ }
+ if(holidayIds.size>=3&&controlDates.size>=14)result.holiday={uplift:mean(holidayRows)-1,eventN:holidayRows.length,holidayN:holidayIds.size,controlN:controlDates.size};
  return result;
 }
 function project(rs,k,{start,end,growth=0,spread=.2,weekendEffect=0,effects={}},learned){if(!BG.dateValid(start)||!BG.dateValid(end)||start>end||end>'2026-12-31'||BG.days(start,end)>92)throw Error('예측은 2026년 내 1~92일 범위로 지정하세요.');if(!Number.isFinite(growth)||growth<-.5||growth>1||!Number.isFinite(spread)||spread<0||spread>1)throw Error('성장 가정 또는 시나리오 폭 오류');if(!rs.length)return null;if(rs.some(r=>r.end>=start))throw Error('기준 실적 종료 다음 날 이후를 예측하세요.');const clean=rs.filter(r=>!events.some(e=>r.start<=e.end&&r.end>=e.start));const selected=(clean.length?clean:rs).slice(-8),n=selected.reduce((s,r)=>s+BG.days(r.start,r.end),0),baseline=selected.reduce((s,r)=>s+BG.metric(r,k),0)/n;const rows=[];
