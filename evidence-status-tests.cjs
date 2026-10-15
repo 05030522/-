@@ -1,0 +1,10 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');for(const f of ['core.js','forecast-core.js','forecast-auto.js','evidence-status.js'])vm.runInThisContext(fs.readFileSync(__dirname+'/'+f,'utf8'));
+const r={start:'2026-10-13',end:'2026-10-13',metrics:{gmv:10}},event={start:'2026-11-11',end:'2026-11-30',type:'platform'};
+assert.equal(BGForecast.evidenceStatus([],'gmv',{kind:'event',event,asOf:'2026-10-15'}).code,'future');assert.equal(BGForecast.evidenceStatus([],'gmv').code,'missing');
+assert.equal(BGForecast.evidenceStatus([r],'gmv',{kind:'weekend',model:{validation:{mode:'mean',name:'mean'}}}).code,'disabled');
+assert.match(BGForecast.evidenceStatus([r],'gmv',{kind:'spread',model:{sourceCount:1}}).label,/1\/4/);
+assert.equal(BGForecast.evidenceStatus([r],'gmv',{kind:'spread',model:{sourceCount:4,level:0}}).code,'zero');
+assert.match(BGForecast.evidenceStatus([r],'gmv',{kind:'weekend'}).label,/주말 0\/4일/);
+assert.equal(BGForecast.events.find(e=>e.id==='bfcm').end,'2026-11-30');
+assert.ok(Object.keys(BGForecast.dataRequests).length>=11);assert.ok(Object.values(BGForecast.dataRequests).every(r=>r.path&&r.fields&&r.period&&r.reason));
+console.log('PASS: distinguish future, missing data, disabled correction, insufficient sample and zero denominator; export requests and official BFCM end');
