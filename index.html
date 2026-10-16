@@ -6,26 +6,28 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Brand Growth — 브랜드 성장 대시보드</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="forecast.css">
-  <script src="core.js?v=20261015-diagnosis" defer></script><script src="automation-schema.js?v=20261015-diagnosis" defer></script><script src="app.js?v=20261015-diagnosis" defer></script><script src="forecast-core.js?v=20261015-diagnosis" defer></script><script src="forecast-auto.js?v=20261015-diagnosis" defer></script><script src="forecast-models.js?v=20261015-diagnosis" defer></script><script src="forecast-validation.js?v=20261015-diagnosis" defer></script><script src="evidence-status.js?v=20261015-diagnosis" defer></script><script src="forecast-ui.js?v=20261015-diagnosis" defer></script><script src="automation-ui.js?v=20261015-diagnosis" defer></script><script src="pending-ui.js?v=20261015-diagnosis" defer></script>
-<script src="seasonal-ui.js?v=20261015-diagnosis" defer></script>
-<script src="evidence-ui.js?v=20261015-diagnosis" defer></script>
-<script src="backtest-ui.js?v=20261015-diagnosis" defer></script>
-<script src="data-health-ui.js?v=20261015-diagnosis" defer></script>
-<link rel="stylesheet" href="diagnostic.css?v=20261015-diagnosis">
-<script src="diagnostic-core.js?v=20261015-diagnosis" defer></script><script src="diagnostic-ui.js?v=20261015-diagnosis" defer></script>
+  <script src="core.js?v=20261016-manager" defer></script><script src="automation-schema.js?v=20261016-manager" defer></script><script src="app.js?v=20261016-manager" defer></script><script src="forecast-core.js?v=20261016-manager" defer></script><script src="forecast-auto.js?v=20261016-manager" defer></script><script src="forecast-models.js?v=20261016-manager" defer></script><script src="forecast-validation.js?v=20261016-manager" defer></script><script src="evidence-status.js?v=20261016-manager" defer></script><script src="forecast-ui.js?v=20261016-manager" defer></script><script src="automation-ui.js?v=20261016-manager" defer></script><script src="pending-ui.js?v=20261016-manager" defer></script>
+<script src="seasonal-ui.js?v=20261016-manager" defer></script>
+<script src="evidence-ui.js?v=20261016-manager" defer></script>
+<script src="backtest-ui.js?v=20261016-manager" defer></script>
+<script src="data-health-ui.js?v=20261016-manager" defer></script>
+<link rel="stylesheet" href="diagnostic.css?v=20261016-manager">
+<script src="diagnostic-core.js?v=20261016-manager" defer></script><script src="diagnostic-ui.js?v=20261016-manager" defer></script>
+<link rel="stylesheet" href="manager.css?v=20261016-manager">
+<script src="manager-sources.js?v=20261016-manager" defer></script><script src="manager-ui.js?v=20261016-manager" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">본문으로 이동</a>
 <aside class="sidebar">
- <a class="wordmark" href="#overview"><span class="logo">b<span>↗</span></span><span>brand growth<small>YOUR GROWTH WORKSPACE</small></span></a>
+ <a class="wordmark" href="#overview"><span class="logo">b<span>↗</span></span><span>brand growth<small>SHOP OPERATIONS</small></span></a>
  <div class="brand-block"><label for="brand-select">WORKSPACE</label><select id="brand-select" aria-label="브랜드 선택"></select><button id="add-brand" class="text-button">＋ 새 브랜드</button></div>
  <nav id="nav" aria-label="주 메뉴"></nav>
  <div class="sidebar-bottom"><span class="storage-dot"></span> 이 브라우저에 저장<small>기록은 외부 서버로 전송되지 않습니다.</small><button class="text-button" id="backup-side">↗ 전체 기록 백업</button></div>
 </aside>
 <div class="workspace">
- <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="brand-label"></strong></div><div class="top-actions"><span id="save-state" role="status">저장 준비</span><button class="button" id="import-button">가져오기</button><button class="button primary" id="new-record">＋ 지표 입력</button></div></header>
+ <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="brand-label"></strong></div><div class="top-actions"><span id="save-state" role="status">저장 준비</span><button class="button" id="import-button">표준 파일 가져오기</button><button class="button primary" id="new-record">＋ 지표 입력</button></div></header>
  <main id="main" tabindex="-1"></main>
- <footer>Brand Growth <span>기간과 출처를 함께 기록하고, 같은 기준으로 비교하세요.</span></footer>
+ <footer>Brand Growth <span>실적 · 실행 · 예측</span></footer>
 </div>
 <dialog id="modal"><div id="modal-content"></div></dialog>
 <input id="file-input" type="file" accept=".json,.csv,application/json,text/csv" hidden>
