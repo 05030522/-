@@ -1,0 +1,11 @@
+const assert=require('assert'),{analyze}=require('./turning-core.js');const date=i=>new Date(Date.parse('2026-10-01')+i*86400000).toISOString().slice(0,10),rows=a=>a.map((v,i)=>({brandId:'b',entity:'shop',tz:'UTC-08:00',currency:'USD',complete:true,basis:'period',start:date(i),end:date(i),metrics:{gmv:v},revision:1}));
+const actual=rows([10,8,4,8,12,9,6,9,15,11,8,10,9]);const d=analyze(actual,{asOf:date(12),windowDays:14,side:2});
+assert(d.ready);assert.deepEqual(d.lows.map(r=>r.value),[4,6,8]);assert.deepEqual(d.highs.map(r=>r.value),[12,15]);assert.equal(d.lowMove.days,4);assert.equal(d.lowMove.change,2);assert.equal(d.highMove.change,3);assert.equal(d.lows[2].confirmedOn,date(12));assert.equal(d.breakout.broken,false);assert.equal(d.breakout.daysSinceReference,4);
+const before=analyze(actual,{asOf:date(10),windowDays:14,side:2});assert.equal(before.lows.length,2);assert.equal(before.rows.length,11);assert(!before.lows.some(p=>p.date===date(10)));
+const future=analyze([...actual,{...actual[0],start:'2026-10-30',end:'2026-10-30',metrics:{gmv:9999}}],{asOf:date(12),windowDays:14,side:2});assert.deepEqual(future,d);
+const gap=analyze(actual.filter((_,i)=>i!==3),{asOf:date(12),windowDays:14,side:2});assert(!gap.lows.some(p=>p.date===date(2)));
+assert.equal(analyze(rows(Array(12).fill(5)),{asOf:date(11),windowDays:14,side:2}).highs.length,0);
+const excluded=analyze(actual.map(r=>({...r,estimated:true})),{asOf:date(12),windowDays:14,side:2});assert.equal(excluded.ready,false);
+const rise=analyze(rows([1,2,3,4,5,6,7,8]),{asOf:date(7),windowDays:14,side:2});assert.equal(rise.todayRecord,true);assert.equal(rise.previous7High,7);assert.equal(rise.daysSinceRenewal,0);
+assert.equal(analyze([...actual,{...actual[0],tz:'UTC+00:00'}],{asOf:date(12),windowDays:14,side:2}).ready,false);
+console.log('PASS: confirmed highs/lows, date spacing, confirmation lag, no future leakage, missing-day isolation, plateaus, estimated-data exclusion, 7-day records and scope isolation.');
