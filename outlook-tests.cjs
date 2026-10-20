@@ -1,0 +1,11 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+for(const f of ['core.js','forecast-core.js','forecast-auto.js','forecast-models.js','forecast-validation.js','diagnostic-core.js','outlook-core.js'])vm.runInThisContext(fs.readFileSync(__dirname+'/'+f,'utf8'));
+const date=t=>new Date(t).toISOString().slice(0,10),rows=Array.from({length:180},(_,i)=>{const d=date(Date.parse('2026-04-01')+i*86400000);return {id:d,revision:1,brandId:'b',module:'shop',entity:'all',start:d,end:d,tz:'UTC-08:00',currency:'USD',basis:'period',complete:true,metrics:{gmv:100,orders:5,items:6,clicks:100,impressions:1000,creatorGmv:40}};}),last=rows.at(-1).end,range={start:date(Date.parse(last)+2*86400000),end:date(Date.parse(last)+31*86400000)};
+const m=BGOutlook.fit(rows,range);assert.ok(Math.abs(m.normal-3000)<1e-6);assert.ok(m.integrated.ready);assert.equal(m.validation.holdout.wape,0);assert.ok(m.integrated.embargo>0);assert.equal(m.rows.length,30);for(const k of ['normal','conservative','bull'])assert.ok(Math.abs(m.rows.reduce((s,r)=>s+r[k],0)-m[k])<1e-6);
+const future={...rows[0],id:'future',start:range.start,end:range.start,metrics:{gmv:1e9}};assert.equal(BGOutlook.fit([...rows,future],range).normal,m.normal);
+const estimated={...rows.at(-1),id:'estimated',revision:2,estimated:true,metrics:{gmv:1e9}};assert.ok(BGOutlook.fit([...rows,estimated],range).normal<10000);
+assert.equal(BGOutlook.fit(rows.slice(-20),range),null);
+const hole=rows.filter(r=>r.end!==rows.at(-5).end);assert.equal(BGOutlook.fit(hole,range),null);
+const missing=rows.map(r=>({...r,metrics:{gmv:r.metrics.gmv}})),fallback=BGOutlook.fit(missing,range);assert.equal(fallback.normal,3000);assert.ok(!fallback.integrated.scores.some(s=>s.mode==='funnel'||s.mode==='creator'||s.mode==='blend'));
+const zero=rows.map(r=>({...r,metrics:{gmv:0,orders:0,clicks:0}}));assert.equal(BGOutlook.fit(zero,range).normal,0);
+console.log('PASS: constant-series calibration, held-out error, embargo, future/estimated exclusion, sparse/missing-day gates, missing predictors and zero sales, scenario reconciliation');
