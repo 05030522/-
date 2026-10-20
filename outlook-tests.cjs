@@ -8,4 +8,5 @@ assert.equal(BGOutlook.fit(rows.slice(-20),range),null);
 const hole=rows.filter(r=>r.end!==rows.at(-5).end);assert.equal(BGOutlook.fit(hole,range),null);
 const missing=rows.map(r=>({...r,metrics:{gmv:r.metrics.gmv}})),fallback=BGOutlook.fit(missing,range);assert.equal(fallback.normal,3000);assert.ok(!fallback.integrated.scores.some(s=>s.mode==='funnel'||s.mode==='creator'||s.mode==='blend'));
 const zero=rows.map(r=>({...r,metrics:{gmv:0,orders:0,clicks:0}}));assert.equal(BGOutlook.fit(zero,range).normal,0);
-console.log('PASS: constant-series calibration, held-out error, embargo, future/estimated exclusion, sparse/missing-day gates, missing predictors and zero sales, scenario reconciliation');
+assert.equal(BGOutlook.rangeNote(m),null);const young=BGOutlook.fit(rows.slice(-100),range);assert.equal(young.integrated.ready,false);assert.match(BGOutlook.rangeNote(young),/과거 검증 구간 \d+\/12개 · 완료 일별 최대 \d+일/);for(let n=100;n<=180;n++){const y=BGOutlook.fit(rows.slice(-n),range),need=12-y.integrated.folds;if(!y.integrated.ready&&need>0)assert.ok(BGOutlook.fit(rows.slice(-Math.min(180,n+need*7)),range).integrated.ready||n+need*7>180);}
+console.log('PASS: range readiness note, constant-series calibration, held-out error, embargo, future/estimated exclusion, sparse/missing-day gates, missing predictors and zero sales, scenario reconciliation');
