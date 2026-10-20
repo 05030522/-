@@ -1,0 +1,12 @@
+const assert=require('assert'),P=require('./planning-core.js');
+const actual={gmv:1000,orders:50,items:75,clicks:500,impressions:10000};
+const base=P.funnel(2000,actual),bull=P.funnel(3000,actual);
+assert.equal(base.orders,100);assert.equal(base.items,150);assert.equal(base.clicks,1000);assert.equal(base.impressions,20000);assert.equal(bull.orders,150);assert.equal(bull.orders*base.aov,bull.gmv);
+assert.equal(P.funnel(100,{}).orders,null);assert.equal(P.funnel(100,{gmv:0,orders:0}).orders,null);
+const plan={requests:100,postRate:50,videosPerPoster:2,viewsPerVideo:1000,viewClickRate:2,clickOrderRate:5,aov:30,incrementalShare:25,costPerRequest:10};
+const seed=P.seed(plan);assert.equal(seed.videos,100);assert.equal(seed.views,100000);assert.equal(seed.orders,100);assert.equal(seed.gross,3000);assert.equal(seed.incremental,750);assert.equal(seed.cost,1000);
+assert.equal(P.seed({...plan,incrementalShare:null}).incremental,null);assert.equal(P.seed({...plan,postRate:null}).ready,false);assert.equal(P.seed({...plan,postRate:101}).ready,false);
+const back=P.reverse(2750,2000,plan);assert.equal(back.requests,100);assert.equal(back.videos,100);assert.equal(back.views,100000);assert.equal(back.requestGap,0);assert.equal(back.cost,1000);
+assert.equal(P.reverse(2750,2000,{...plan,postRate:0}).requests,null);assert.equal(P.reverse(2000,2000,{}).requests,0);
+const cohort=P.cohorts([{shipped_date:'2026-08-01',observation_date:'2026-10-20',first_video_date:'2026-08-20'},{shipped_date:'2026-08-01',observation_date:'2026-10-20',first_video_date:'2026-09-20'},{shipped_date:'2026-10-10',observation_date:'2026-10-20',first_video_date:'2026-10-15'},{shipped_date:'2026-08-01',observation_date:'2026-10-21',first_video_date:'2026-08-20'}],'2026-10-20');assert.equal(cohort.n,2);assert.equal(cohort.postRate,50);
+console.log('PASS: coherent GMV funnel, sample-to-video-to-sales, overlap exclusion, missing/zero assumptions, reverse requirements and mature cohorts.');
