@@ -1,0 +1,9 @@
+(function(root){'use strict';
+// Relative point heights read approximately from the supplied Oct 1–19 screenshot.
+const costY=[554,640,630,588,526,500,534,581,533,608,554,465,526,588,540,556,590,532,601];
+const orderY=[605,652,658,622,571,588,595,629,577,635,565,519,584,623,588,599,652,598,646];
+function allocate(total,weights){if(!Number.isSafeInteger(total)||total<0)throw Error('올바른 합계가 필요합니다.');const sum=weights.reduce((a,b)=>a+b,0),values=weights.map(w=>w/sum*total),result=values.map(Math.floor),left=total-result.reduce((a,b)=>a+b,0),ranks=values.map((v,i)=>({i,r:v-result[i]})).sort((a,b)=>b.r-a.r||a.i-b.i);for(let i=0;i<left;i++)result[ranks[i].i]++;return result;}
+function matches(r){return r?.module==='ads'&&r.entity==='전체'&&r.start==='2026-10-01'&&r.end==='2026-10-19'&&r.complete&&/4593da11/.test(r.source||'')&&['cost','revenue','skuOrders'].every(k=>Number.isFinite(r.metrics[k])&&r.metrics[k]>=0)&&Number.isInteger(r.metrics.skuOrders);}
+function estimate(r){if(!matches(r))return null;const costs=allocate(Math.round(r.metrics.cost*100),costY.map(y=>703-y)),orders=allocate(r.metrics.skuOrders,orderY.map(y=>703-y)),revenue=allocate(Math.round(r.metrics.revenue*100),orders.reduce((a,b)=>a+b,0)>0?orders:costY.map(y=>703-y));return costs.map((c,i)=>({date:'2026-10-'+String(i+1).padStart(2,'0'),cost:c/100,revenue:revenue[i]/100,skuOrders:orders[i],roi:c>0?revenue[i]/c:null,cpo:orders[i]>0?c/100/orders[i]:null,estimated:true}));}
+root.BGAdEstimateCore={allocate,matches,estimate};if(typeof module!=='undefined')module.exports=root.BGAdEstimateCore;
+})(typeof globalThis!=='undefined'?globalThis:this);
