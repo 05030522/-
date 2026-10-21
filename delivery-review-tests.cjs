@@ -1,0 +1,13 @@
+const assert=require('assert/strict');require('./core.js');require('./delivery.js');require('./delivery-review.js');
+const op={id:'op',revision:1,brandId:'b',module:'delivery',productId:'p',entity:'p',actualStart:'2026-10-15T21:34:07-08:00',actualEnd:'2026-10-19T22:55:26-08:00'};
+const make=(d,metrics={gmv:100,skuOrders:10,impressions:1000,clicks:100,atc:20})=>({id:d,revision:1,brandId:'b',module:'traffic',trafficScope:'product',channel:'All',productId:'p',entity:'p / All',start:d,end:d,tz:'source',currency:'USD',basis:'period',complete:true,metrics});
+let rows=Array.from({length:11},(_,i)=>make('2026-10-'+String(i+9).padStart(2,'0')));
+let x=BGDeliveryReview.compare([op,...rows],'b')[0];assert.equal(x.before.days,6);assert.equal(x.during.days,4);assert.equal(x.change.gmv,0);assert.equal(x.during.start,'2026-10-16');assert.equal(x.during.ctor,.1);
+assert.equal(BGDeliveryReview.compare([op,...rows],'other').length,0);
+assert.equal(BGDeliveryReview.compare([op,...rows.filter(r=>r.end!=='2026-10-17')],'b')[0].during,undefined);
+let spike=make('2026-10-16',{gmv:200,skuOrders:10,impressions:1000,clicks:100,atc:20});spike.id='revision';spike.revision=2;x=BGDeliveryReview.compare([op,...rows,spike],'b')[0];assert.equal(x.change.gmv,.25);
+assert.equal(BGDeliveryReview.compare([op,...rows, {...spike,id:'other',brandId:'other',revision:3}],'b')[0].change.gmv,0);
+assert.equal(BGDeliveryReview.compare([op,...rows, {...spike,id:'estimate',revision:3,estimated:true}],'b')[0].during,undefined);
+assert.equal(BGDeliveryReview.compare([op,...rows],'b','matched')[0].before.days,4);
+assert.equal(BGDeliveryReview.compare([op,...rows.map(r=>({...r,tz:r.end==='2026-10-17'?'other':'source'}))],'b')[0].during,undefined);
+console.log('PASS: actual-only product windows, daily normalization, latest revision, brand/timezone isolation, missing-day gates and same-weekday baseline');
