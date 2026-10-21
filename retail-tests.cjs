@@ -1,0 +1,8 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');for(const f of ['core.js','peak-schema.js','retail-schema.js','peak-core.js'])vm.runInThisContext(fs.readFileSync(__dirname+'/'+f,'utf8'));
+const stock={id:'stock',revision:1,brandId:'test',module:'inventory',entity:'bundle',start:'2026-10-20',end:'2026-10-20',basis:'snapshot',complete:true,virtualBundle:true,unitVerified:false,metrics:{onHand:500,totalDisplayed:500,availableDisplayed:480,fbtStored:120}};
+const sales=Array.from({length:10},(_,i)=>({id:'s'+i,revision:1,brandId:'test',module:'products',entity:'bundle',start:'2026-10-'+String(i+10).padStart(2,'0'),end:'2026-10-'+String(i+10).padStart(2,'0'),basis:'period',complete:true,metrics:{items:10,gmv:100}}));
+let s=BGPeak.stock([stock,...sales],'2026-10-21')[0];assert.equal(s.cover,null);assert.equal(s.stockout,null);assert.equal(s.onHand,null);
+s=BGPeak.stock([{...stock,unitVerified:true},...sales],'2026-10-21')[0];assert.equal(s.cover,50);assert.ok(s.stockout);
+const ms=BGPeak.milestones({start:'2026-11-11',end:'2026-11-30'},'2026-10-21',{},[{onHand:null,avgUnits:10,stockout:null}]);assert.match(ms.find(m=>m.kind==='stock').note,/미확인/);
+assert.equal(BG.schemas.searchKeyword.fields.find(f=>f.key==='searchVisitors').unit,'count');assert.equal(BG.schemas.storefront.fields.find(f=>f.key==='viewOrderRate').unit,'percent');assert.equal(BG.schemas.fulfillment.fields.length,1);
+console.log('PASS: unverified virtual stock cannot create cover/stockout, verified physical units work, unknown stock is not sufficient, keyword and storefront grains remain separate');
