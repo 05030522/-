@@ -1,0 +1,9 @@
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
+for(const f of ['core.js','creator-goals.js'])vm.runInThisContext(fs.readFileSync(__dirname+'/'+f,'utf8'));
+const r={brandId:'b',module:'creatorGoals',entity:'whole',id:'a',revision:1,start:'2026-10-01',end:'2026-10-21',complete:true,goalDeadline:'2026-10-31',metrics:{videos:40,videoTarget:100,shipped:12,sampleTarget:30},goalDashboard:{queries:{products:{rows:[{shipped:5,target:10},{shipped:7,target:20}]}}}};
+const m=BGCreatorGoals.model(r);assert.equal(m.remainingDays,10);assert.equal(m.goals[0].rate,40);assert.equal(m.goals[0].daily,6);assert.equal(m.goals[1].rate,40);
+assert.throws(()=>BGCreatorGoals.model({...r,metrics:{...r.metrics,shipped:13}}),/합계/);
+assert.equal(BGCreatorGoals.latest([{...r,brandId:'other'}],'b'),null);
+assert.equal(BGCreatorGoals.latest([r,{...r,id:'b',revision:2,metrics:{...r.metrics,videos:50}}],'b').revision,2);
+assert.equal(BGCreatorGoals.model({...r,goalDeadline:r.end}).goals[0].daily,null);
+console.log('PASS: goals reconcile, brand/revision isolation, remaining days and zero-day boundary');
