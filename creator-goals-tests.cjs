@@ -6,4 +6,5 @@ assert.throws(()=>BGCreatorGoals.model({...r,metrics:{...r.metrics,shipped:13}})
 assert.equal(BGCreatorGoals.latest([{...r,brandId:'other'}],'b'),null);
 assert.equal(BGCreatorGoals.latest([r,{...r,id:'b',revision:2,metrics:{...r.metrics,videos:50}}],'b').revision,2);
 assert.equal(BGCreatorGoals.model({...r,goalDeadline:r.end}).goals[0].daily,null);
+const mixed=BGCreatorGoals.model({...r,end:'2026-10-24',videoAsOf:'2026-10-21'});assert.equal(mixed.goals[0].remainingDays,10);assert.equal(mixed.goals[1].remainingDays,7);assert.equal(mixed.goals[0].asOf,'2026-10-21');
 console.log('PASS: goals reconcile, brand/revision isolation, remaining days and zero-day boundary');
