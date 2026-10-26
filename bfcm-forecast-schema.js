@@ -1,0 +1,1 @@
+(()=>{'use strict';const f=(key,label)=>({key,label,unit:'ratio',description:'행사 기간에만 적용하는 조건부 배수 · 업계 평균 아님'});BG.schemas.forecastPlan={name:'행사 조건부 전망',icon:'◷',desc:'통계 기본 예측과 행사·시딩 준비 가정 분리',fields:[f('lowFactor','하방 행사 배수'),f('centerFactor','중심 행사 배수'),f('highFactor','상방 행사 배수')],hero:['lowFactor','centerFactor','highFactor']};})();
