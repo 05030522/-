@@ -10,9 +10,10 @@ function inferBfcm(plan,traffic){
  return {method:'channel-weighted-judgment-v1',start:c.start,end:c.end,groups,weighted,lift,centerFactor:1+lift,lowFactor:1,highFactor:1.4,assumed:true,note:'매출 비중은 실측, 채널별 상승률은 분석자 판단. 동일 규모·카테고리 평균 또는 인과효과 추정치 아님. 범위는 확률구간 아님.'};
 }
 function creativeReview(records,currency,asOf,target){
- const all=BG.latest(records).filter(r=>r.module==='creative'&&r.complete&&!r.estimated&&r.fullSource&&r.currency===currency&&r.end<=asOf),end=all.map(r=>r.end).sort().at(-1);if(!end)return null;
+ const current=BG.latest(records),coverage=current.filter(r=>r.module==='ads'&&r.complete&&!r.estimated&&r.creativeSourceComplete&&typeof r.creativeSource==='string');
+ const all=current.filter(r=>r.module==='creative'&&r.complete&&!r.estimated&&(r.fullSource||coverage.some(s=>s.brandId===r.brandId&&s.start===r.start&&s.end===r.end&&s.tz===r.tz&&s.currency===r.currency&&s.creativeSource===r.source))&&r.currency===currency&&r.end<=asOf),end=all.map(r=>r.end).sort().at(-1);if(!end)return null;
  const latest=all.filter(r=>r.end===end),start=latest.map(r=>r.start).sort().at(-1),tz=latest.find(r=>r.start===start)?.tz;
- const rows=latest.filter(r=>r.start===start&&r.tz===tz&&r.creativeType==='Video'&&['cost','revenue','skuOrders','impressions','clicks'].every(k=>finite(r.metrics[k]))).map(r=>({...r,roi:r.metrics.cost>0?r.metrics.revenue/r.metrics.cost:null,ctr:r.metrics.impressions>0?r.metrics.clicks/r.metrics.impressions:null}));
+ const rows=latest.filter(r=>r.start===start&&r.tz===tz&&r.creativeType==='Video'&&['cost','revenue','skuOrders','impressions','clicks'].every(k=>finite(r.metrics[k]))).map(r=>({...r,account:r.account||r.creatorName,roi:r.metrics.cost>0?r.metrics.revenue/r.metrics.cost:null,ctr:r.metrics.impressions>0?r.metrics.clicks/r.metrics.impressions:null}));
  if(!rows.length)return null;const cost=sum(rows.map(r=>r.metrics.cost)),orders=sum(rows.map(r=>r.metrics.skuOrders)),cpo=orders>0?cost/orders:null,threshold=finite(cpo)?2*cpo:null;
  const weak=threshold===null?[]:rows.filter(r=>r.metrics.cost>=threshold&&(r.metrics.skuOrders===0||(r.metrics.skuOrders>=3&&r.roi<target))).sort((a,b)=>b.metrics.cost-a.metrics.cost);
  const strong=rows.filter(r=>r.metrics.skuOrders>=5&&r.metrics.cost>0&&r.roi>=target).sort((a,b)=>b.metrics.revenue-a.metrics.revenue);
@@ -22,3 +23,4 @@ function creativeReview(records,currency,asOf,target){
 function review(x,records){const t=x.traffic,weak=t?.channels.slice().sort((a,b)=>a.gmvChange-b.gmvChange)[0]||null,a=x.ads[0];return {weakChannel:weak,atcChange:t&&finite(t.current.atcRate)&&finite(t.previous.atcRate)?t.current.atcRate-t.previous.atcRate:null,adDecision:a?.current?(a.current.roi<a.target?'확대 보류 · 저효율 소재 재확인':'제한적 확대 검토 · 최신 소재 확인'):null,creative:creativeReview(records,x.currency,x.asOf,a?.target),priceAlerts:x.prices.filter(p=>p.reverse)};}
 globalThis.BGOperatingAssessment={inferBfcm,creativeReview,review};
 })();
+
