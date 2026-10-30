@@ -12,7 +12,7 @@ function inferBfcm(plan,traffic){
 function creativeReview(records,currency,asOf,target){
  const current=BG.latest(records),coverage=current.filter(r=>r.module==='ads'&&r.complete&&!r.estimated&&r.creativeSourceComplete&&typeof r.creativeSource==='string');
  const all=current.filter(r=>r.module==='creative'&&r.complete&&!r.estimated&&(r.fullSource||coverage.some(s=>s.brandId===r.brandId&&s.start===r.start&&s.end===r.end&&s.tz===r.tz&&s.currency===r.currency&&s.creativeSource===r.source))&&r.currency===currency&&r.end<=asOf),end=all.map(r=>r.end).sort().at(-1);if(!end)return null;
- const latest=all.filter(r=>r.end===end),start=latest.map(r=>r.start).sort().at(-1),tz=latest.find(r=>r.start===start)?.tz;
+ const latest=all.filter(r=>r.end===end),starts=[...new Set(latest.map(r=>r.start))].sort(),start=starts.find(s=>BG.days(s,end)===7)||starts.at(-1),tz=latest.find(r=>r.start===start)?.tz;
  const rows=latest.filter(r=>r.start===start&&r.tz===tz&&r.creativeType==='Video'&&['cost','revenue','skuOrders','impressions','clicks'].every(k=>finite(r.metrics[k]))).map(r=>({...r,account:r.account||r.creatorName,roi:r.metrics.cost>0?r.metrics.revenue/r.metrics.cost:null,ctr:r.metrics.impressions>0?r.metrics.clicks/r.metrics.impressions:null}));
  if(!rows.length)return null;const cost=sum(rows.map(r=>r.metrics.cost)),orders=sum(rows.map(r=>r.metrics.skuOrders)),cpo=orders>0?cost/orders:null,threshold=finite(cpo)?2*cpo:null;
  const weak=threshold===null?[]:rows.filter(r=>r.metrics.cost>=threshold&&(r.metrics.skuOrders===0||(r.metrics.skuOrders>=3&&r.roi<target))).sort((a,b)=>b.metrics.cost-a.metrics.cost);
