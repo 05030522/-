@@ -9,3 +9,5 @@ assert.equal(BGCreatorGoals.model({...r,goalDeadline:r.end}).goals[0].daily,null
 const mixed=BGCreatorGoals.model({...r,end:'2026-10-24',videoAsOf:'2026-10-21'});assert.equal(mixed.goals[0].remainingDays,10);assert.equal(mixed.goals[1].remainingDays,7);assert.equal(mixed.goals[0].asOf,'2026-10-21');
 const split=BGCreatorGoals.model({...r,end:'2026-10-24',videoDeadline:'2026-10-31',sampleDeadline:'2026-11-10'});assert.equal(split.goals[0].remainingDays,7);assert.equal(split.goals[1].remainingDays,17);assert.equal(split.remainingDays,17);assert.equal(split.goals[1].deadline,'2026-11-10');
 console.log('PASS: goals reconcile, brand/revision isolation, remaining days and zero-day boundary');
+
+const dates=BGCreatorGoals.model({...r,end:"2026-10-31",sampleAsOf:"2026-10-29",sampleDeadline:"2026-11-10"});assert.equal(dates.goals[1].asOf,"2026-10-29");assert.equal(dates.remainingDays,12);
