@@ -11,3 +11,5 @@ const split=BGCreatorGoals.model({...r,end:'2026-10-24',videoDeadline:'2026-10-3
 console.log('PASS: goals reconcile, brand/revision isolation, remaining days and zero-day boundary');
 
 const dates=BGCreatorGoals.model({...r,end:"2026-10-31",sampleAsOf:"2026-10-29",sampleDeadline:"2026-11-10"});assert.equal(dates.goals[1].asOf,"2026-10-29");assert.equal(dates.remainingDays,12);
+
+const over=BGCreatorGoals.model({...r,metrics:{...r.metrics,shipped:32},goalDashboard:{queries:{products:{rows:[{shipped:20,target:10},{shipped:12,target:20}]}}}});assert.equal(over.goals[1].remaining,8);assert.equal(over.goals[1].daily,0.8);
